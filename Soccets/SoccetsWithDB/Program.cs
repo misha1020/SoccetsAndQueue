@@ -13,6 +13,7 @@ using RabbitMQ.Client;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using RabbitMQ.Client.Events;
 
 namespace SoccetsWithDB
 {
@@ -30,51 +31,26 @@ namespace SoccetsWithDB
 
         static void Main(string[] args)
         {
+            SoccetsSend();
+            Console.WriteLine("Сокеты отправлены");
+
             string dbFileName = "StudentsDB.db";
             DataSet dSet = ReadDataFromFile(dbFileName);
-
             if (dSet != null && dSet.Tables.Count > 0)
             {
                 DataSet finalSet = new DataSet("Final");
                 finalSet = DataNormalize(dSet);
                 //QueueSend(finalSet);
-
-                SoccetsSend(finalSet);
-
-
-                //SqlCommandBuilder commandBuilder = new SqlCommandBuilder(adapter);
-                //adapter.Update(ds);
-                //// альтернативный способ - обновление только одной таблицы
-                ////adapter.Update(dt);
-                //// заново получаем данные из бд
-                //// очищаем полностью DataSet
-                //ds.Clear();
-                //// перезагружаем данные
-                //adapter.Fill(ds);
-                //
-                //foreach (DataColumn column in dt.Columns)
-                //    Console.Write("\t{0}", column.ColumnName);
-                //Console.WriteLine();
-                //// перебор всех строк таблицы
-                //foreach (DataRow row in dt.Rows)
-                //{
-                //    // получаем все ячейки строки
-                //    var cells = row.ItemArray;
-                //    foreach (object cell in cells)
-                //        Console.Write("\t{0}", cell);
-                //    Console.WriteLine();
-                //}
-
-
                 //Print(finalSet);
             }
             else
                 Console.Write("Датасэт пуст");
+
             Console.ReadKey();
         }
 
 
-        public static void SoccetsSend(DataSet dataSet)
+        public static void SoccetsSend()
         {
             int port = 11000;
 
@@ -95,17 +71,17 @@ namespace SoccetsWithDB
                     string data = null;
 
 
-                    byte[] bytes = new byte[1024];
+                    byte[] bytes = new byte[10240];
                     int bytesRec = handler.Receive(bytes);
+                    DataSet dSet = BytesToDataSet(bytes);
+                    DataSet finalSet = new DataSet("Final");
+                    finalSet = DataNormalize(dSet);
+
                     data += Encoding.UTF8.GetString(bytes, 0, bytesRec);
 
-                    //var des = DES.Create();
-                    //byte[] encDataSet = EncryptTextToMemory(DataSetToBytes(dataSet), des.Key, des.IV);
-                    //handler.Send(des.Key);
-                    //handler.Send(des.IV);
-                    //handler.Send(encDataSet);
 
-                    handler.Send(DataSetToBytes(dataSet));
+
+                    handler.Send(DataSetToBytes(finalSet));
 
                     if (data.IndexOf("<TheEnd>") > -1)
                     {
@@ -277,6 +253,24 @@ namespace SoccetsWithDB
             formatter.Serialize(stream, dataSet);
             byte[] bytes = stream.GetBuffer();
             return bytes;
+        }
+
+        static void Print(DataSet finalSet)
+        {
+            foreach (DataTable dTable in finalSet.Tables)
+            {
+                Console.WriteLine(dTable.TableName);
+                foreach (DataColumn col in dTable.Columns)
+                    Console.Write("\t{0}", col.ColumnName);
+                Console.WriteLine();
+                foreach (DataRow row in dTable.Rows)
+                {
+                    var cells = row.ItemArray;
+                    foreach (object cell in cells)
+                        Console.Write("\t{0}", cell);
+                    Console.WriteLine();
+                }
+            }
         }
     }
 }

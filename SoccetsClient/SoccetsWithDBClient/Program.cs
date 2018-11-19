@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using RabbitMQ;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-
+using System.Data.SQLite;
 
 namespace SoccetsWithDBClient
 {
@@ -20,11 +20,13 @@ namespace SoccetsWithDBClient
     {
         static void Main(string[] args)
         {
+            string dbFileName = "StudentsDB.db";
+            DataSet dSet = ReadDataFromFile(dbFileName);
+            SoccetsRec(dSet);
             //QueueRec();
-            SoccetsRec();
         }
 
-        public static void SoccetsRec()
+        public static void SoccetsRec(DataSet dSet)
         {
             int port = 11000;
             try
@@ -44,15 +46,13 @@ namespace SoccetsWithDBClient
 
 
                 Console.WriteLine("Сокет соединяется с {0} ", sender.RemoteEndPoint.ToString());
-                byte[] msg = Encoding.UTF8.GetBytes(" ");
-                sender.Send(msg);
+                sender.Send(DataSetToBytes(dSet));
                 
                 //sender.Receive(key);
                 //sender.Receive(IV);
 
                 //bytes = DecryptTextFromMemory(bytes, bytesRec, key, IV);
                 int bytesRec = sender.Receive(bytes);
-
                 var dt = BytesToDataSet(bytes);
                 Print(dt);
 
@@ -83,6 +83,7 @@ namespace SoccetsWithDBClient
                                   exchange: "logs",
                                   routingKey: "");
 
+
                 Console.WriteLine("Ожидание");
 
                 var consumer = new EventingBasicConsumer(channel);
@@ -99,6 +100,42 @@ namespace SoccetsWithDBClient
                 Console.WriteLine("Нажмите клавишу [enter], чтобы выйти");
                 Console.ReadLine();
             }
+        }
+
+        public static DataSet ReadDataFromFile(string dbFileName)
+        {
+            SQLiteConnection m_dbConn;
+            SQLiteCommand m_sqlCmd;
+
+            m_dbConn = new SQLiteConnection();
+            m_sqlCmd = new SQLiteCommand();
+
+            String sqlQuery;
+            DataSet dSet = new DataSet();
+
+            m_sqlCmd.Connection = m_dbConn;
+            m_dbConn = new SQLiteConnection("Data Source=" + dbFileName + ";Version=3;");
+            m_dbConn.Open();
+            try
+            {
+                if (m_dbConn.State != ConnectionState.Open)
+                {
+                    Console.WriteLine("Откройте соединение с базой данных");
+                }
+                else
+                {
+                    sqlQuery = "SELECT * FROM Students";
+                    SQLiteDataAdapter adapter = new SQLiteDataAdapter(sqlQuery, m_dbConn);
+                    adapter.Fill(dSet);
+                }
+            }
+            catch (SQLiteException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                return null;
+            }
+
+            return dSet;
         }
 
         static byte[] DataSetToBytes(DataSet dataSet)
