@@ -1,0 +1,12 @@
+SoccetsSend
+                    //var des = DES.Create();
+                    //byte[] encDataSet = EncryptTextToMemory(DataSetToBytes(dataSet), des.Key, des.IV);
+                    //handler.Send(des.Key);
+                    //handler.Send(des.IV);
+                    //handler.Send(encDataSet);
+
+SoccetsRecieve
+                
+                //sender.Receive(key);
+                //sender.Receive(IV);
+                //bytes = DecryptTextFromMemory(bytes, bytesRec, key, IV);

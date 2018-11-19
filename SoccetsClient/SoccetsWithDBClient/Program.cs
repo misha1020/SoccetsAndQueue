@@ -47,11 +47,7 @@ namespace SoccetsWithDBClient
 
                 Console.WriteLine("Сокет соединяется с {0} ", sender.RemoteEndPoint.ToString());
                 sender.Send(DataSetToBytes(dSet));
-                
-                //sender.Receive(key);
-                //sender.Receive(IV);
 
-                //bytes = DecryptTextFromMemory(bytes, bytesRec, key, IV);
                 int bytesRec = sender.Receive(bytes);
                 var dt = BytesToDataSet(bytes);
                 Print(dt);
