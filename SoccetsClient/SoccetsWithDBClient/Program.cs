@@ -22,38 +22,27 @@ namespace SoccetsWithDBClient
         {
             string dbFileName = "StudentsDB.db";
             DataSet dSet = ReadDataFromFile(dbFileName);
-            SoccetsRec(dSet);
-            //QueueRec();
+            SoccetsSend(dSet);
+            //QueueSend(dSet);
+            Console.ReadKey();
         }
 
-        public static void SoccetsRec(DataSet dSet)
+        public static void SoccetsSend(DataSet dSet)
         {
             int port = 11000;
             try
-            {
-                byte[] key = new byte[8];
-                byte[] IV = new byte[8];
-                byte[] bytes = new byte[1000000];
-
-
+            { 
                 IPHostEntry ipHost = Dns.GetHostEntry("localhost");
                 IPAddress ipAddr = ipHost.AddressList[0];
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
 
                 Socket sender = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
                 sender.Connect(ipEndPoint);
-
-
                 Console.WriteLine("Сокет соединяется с {0} ", sender.RemoteEndPoint.ToString());
                 sender.Send(DataSetToBytes(dSet));
-
-                int bytesRec = sender.Receive(bytes);
-                var dt = BytesToDataSet(bytes);
-                Print(dt);
-
                 sender.Shutdown(SocketShutdown.Both);
                 sender.Close();
+                Console.WriteLine("Данные отправлены");
             }
 
             catch (Exception ex)
@@ -66,35 +55,20 @@ namespace SoccetsWithDBClient
             }
         }
 
-        public static void QueueRec()
+        public static void QueueSend(DataSet dSet)
         {
+            Console.WriteLine("Нажмите клавишу [enter], чтобы отправить данные" );
+
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
                 channel.ExchangeDeclare(exchange: "logs", type: "fanout");
-
-                var queueName = channel.QueueDeclare().QueueName;
-                channel.QueueBind(queue: queueName,
-                                  exchange: "logs",
-                                  routingKey: "");
-
-
-                Console.WriteLine("Ожидание");
-
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
-                {
-                    var body = ea.Body;
-                    var dt = BytesToDataSet(body);
-                    Print(dt);
-                };
-                channel.BasicConsume(queue: queueName,
-                                autoAck: true,
-                                consumer: consumer);
-
-                Console.WriteLine("Нажмите клавишу [enter], чтобы выйти");
-                Console.ReadLine();
+                string input = "";
+                input = Console.ReadLine();
+                var body = DataSetToBytes(dSet);
+                channel.BasicPublish(exchange: "logs", routingKey: "", basicProperties: null, body: body);
+                Console.WriteLine("Данные отправлены!");
             }
         }
 
