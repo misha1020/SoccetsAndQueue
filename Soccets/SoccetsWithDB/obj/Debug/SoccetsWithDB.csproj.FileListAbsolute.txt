@@ -19,7 +19,6 @@ C:\Users\shenmay\source\repos\Soccets\SoccetsWithDB\bin\Debug\Microsoft.Diagnost
 C:\Users\shenmay\source\repos\Soccets\SoccetsWithDB\bin\Debug\RabbitMQ.Client.dll
 C:\Users\shenmay\source\repos\Soccets\SoccetsWithDB\bin\Debug\Microsoft.Diagnostics.Tracing.EventSource.xml
 C:\Users\shenmay\source\repos\Soccets\SoccetsWithDB\bin\Debug\RabbitMQ.Client.xml
-C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\obj\Debug\SoccetsWithDB.csprojAssemblyReference.cache
 C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\obj\Debug\SoccetsWithDB.csproj.CoreCompileInputs.cache
 C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\obj\Debug\SoccetsWithDB.exe
 C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\obj\Debug\SoccetsWithDB.pdb
@@ -40,3 +39,4 @@ C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\bin
 C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\bin\Debug\System.Data.SQLite.xml
 C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\bin\Debug\System.Data.SQLite.dll.config
 C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\obj\Debug\SoccetsWithDB.csproj.CopyComplete
+C:\Users\shenmay\Desktop\Занятия\GitHub\Soccets\Soccets\SoccetsWithDB\obj\Debug\SoccetsWithDB.csprojAssemblyReference.cache

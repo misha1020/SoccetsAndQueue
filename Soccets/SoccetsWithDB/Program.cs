@@ -32,62 +32,65 @@ namespace SoccetsWithDB
         }
 
         static void Main(string[] args)
-        {
-            while (true)
-            {
+        {            
                 SoccetsRecieve();
                 //QueueRecieve();
-            }
+            
         }
 
         public static void SoccetsRecieve()
         {
             int port = 11000;
-
-            try
+            while (true)
             {
-                Socket reciever = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                reciever.Bind(new IPEndPoint(IPAddress.Any, port));
-                reciever.Listen(10);
 
-                DataSet dSet = new DataSet();
-                while (true)
+                try
                 {
-                    Console.WriteLine("Ожидаем соединение через порт {0}");
-                    Socket handler = reciever.Accept();
+                    Socket reciever = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    reciever.Bind(new IPEndPoint(IPAddress.Any, port));
+                    reciever.Listen(10);
 
-                    byte[] length = new byte[256];
-                    handler.Receive(length, 0, length.Length, SocketFlags.None);
-                    int bytesRec = FromBytes<int>(length);
-                    byte[] bytes = new byte[bytesRec];
-
-                    int a = 0;
-                    int step = bytesRec;
-                    while (a < bytesRec)
+                    DataSet dSet = new DataSet();
+                    while (true)
                     {
-                        if (a + step > bytesRec)
-                            step = bytesRec - a;
-                        a += handler.Receive(bytes, a, step, SocketFlags.None);
+                        Console.WriteLine();
+                        Console.WriteLine("Ожидается соединение...");
+                        Socket handler = reciever.Accept();
+
+                        byte[] length = new byte[256];
+                        handler.Receive(length, 0, length.Length, SocketFlags.None);
+                        int bytesRec = FromBytes<int>(length);
+                        byte[] bytes = new byte[bytesRec];
+
+                        int a = 0;
+                        int step = bytesRec;
+                        while (a < bytesRec)
+                        {
+                            if (a + step > bytesRec)
+                                step = bytesRec - a;
+                            a += handler.Receive(bytes, a, step, SocketFlags.None);
+                        }
+
+                        dSet = FromBytes<DataSet>(bytes);
+                        handler.Shutdown(SocketShutdown.Both);
+                        handler.Close();
+                        WriteToDBAndPrint(dSet);
                     }
 
-                    dSet = FromBytes<DataSet>(bytes);
-                    handler.Shutdown(SocketShutdown.Both);
-                    handler.Close();
-                    WriteToDBAndPrint(dSet);
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            finally
-            {                
-                Console.ReadLine();
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    Console.ReadLine();
+                }
             }
         }
 
         public static void QueueRecieve()
-        {
+        {            
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
             {
@@ -99,7 +102,7 @@ namespace SoccetsWithDB
                                       exchange: "logs",
                                       routingKey: "");
 
-                    Console.WriteLine("Ожидание...");
+                    
 
                     var consumer = new EventingBasicConsumer(channel);
                     DataSet dSet = new DataSet();
@@ -107,14 +110,18 @@ namespace SoccetsWithDB
                     {
                         var body = ea.Body;
                         dSet = FromBytes<DataSet>(body);
+                        WriteToDBAndPrint(dSet);
+                        Console.WriteLine();
+                        Console.WriteLine("Ожидание...");
                     };
                     channel.BasicConsume(queue: queueName,
                                     autoAck: true,
                                     consumer: consumer);
 
-                    Console.WriteLine("Нажмите клавишу [enter], чтобы считать данные из очереди");
-                    Console.ReadLine();
-                    WriteToDBAndPrint(dSet);
+                    Console.WriteLine("Нажмите клавишу [enter], чтобы выйти"); 
+                    Console.WriteLine("Ожидание...");
+                    Console.ReadKey();
+
                 }
             }
         }
