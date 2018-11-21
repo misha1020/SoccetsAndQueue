@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-
 using System.Data.SQLite;
 using System.Data;
 using System.IO;
@@ -12,7 +8,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 using RabbitMQ.Client;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 using RabbitMQ.Client.Events;
 
 namespace SoccetsWithDB
@@ -62,17 +57,14 @@ namespace SoccetsWithDB
 
             try
             {
-                IPHostEntry ipHost = Dns.GetHostEntry("localhost");
-                IPAddress ipAddr = ipHost.AddressList[0];
-                IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
-                Socket reciever = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-                reciever.Bind(ipEndPoint);
+                Socket reciever = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                reciever.Bind(new IPEndPoint(IPAddress.Any, port));
                 reciever.Listen(10);
+
                 DataSet dSet = new DataSet();
                 while (true)
                 {
-                    Console.WriteLine("Ожидаем соединение через порт {0}", ipEndPoint);
+                    Console.WriteLine("Ожидаем соединение через порт {0}");
                     Socket handler = reciever.Accept();
                     string data = null;
                     byte[] bytes = new byte[10240];

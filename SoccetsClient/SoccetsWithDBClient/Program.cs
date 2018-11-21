@@ -22,8 +22,8 @@ namespace SoccetsWithDBClient
         {
             string dbFileName = "StudentsDB.db";
             DataSet dSet = ReadDataFromFile(dbFileName);
-            SoccetsSend(dSet);
-            //QueueSend(dSet);
+            //SoccetsSend(dSet);
+            QueueSend(dSet);
             Console.ReadKey();
         }
 
@@ -32,8 +32,7 @@ namespace SoccetsWithDBClient
             int port = 11000;
             try
             { 
-                IPHostEntry ipHost = Dns.GetHostEntry("localhost");
-                IPAddress ipAddr = ipHost.AddressList[0];
+                IPAddress ipAddr = IPAddress.Parse("25.12.0.19");
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
 
                 Socket sender = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
