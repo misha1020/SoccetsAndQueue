@@ -55,15 +55,24 @@ namespace SoccetsWithDB
                 {
                     Console.WriteLine("Ожидаем соединение через порт {0}");
                     Socket handler = reciever.Accept();
-                    string data = null;
-                    byte[] bytes = new byte[10240];
-                    int bytesRec = handler.Receive(bytes);
-                    dSet = BytesToDataSet(bytes);
-                    data += Encoding.UTF8.GetString(bytes, 0, bytesRec);
+
+                    byte[] length = new byte[256];
+                    handler.Receive(length, 0, length.Length, SocketFlags.None);
+                    int bytesRec = FromBytes<int>(length);
+                    byte[] bytes = new byte[bytesRec];
+
+                    int a = 0;
+                    int step = bytesRec;
+                    while (a < bytesRec)
+                    {
+                        if (a + step > bytesRec)
+                            step = bytesRec - a;
+                        a += handler.Receive(bytes, a, step, SocketFlags.None);
+                    }
+
+                    dSet = FromBytes<DataSet>(bytes);
                     handler.Shutdown(SocketShutdown.Both);
                     handler.Close();
-                    Console.WriteLine("Нажмите клавишу [enter], чтобы отобразить полученные данные");
-                    Console.ReadLine();
                     WriteToDBAndPrint(dSet);
                 }
             }
@@ -97,7 +106,7 @@ namespace SoccetsWithDB
                     consumer.Received += (model, ea) =>
                     {
                         var body = ea.Body;
-                        dSet = BytesToDataSet(body);
+                        dSet = FromBytes<DataSet>(body);
                     };
                     channel.BasicConsume(queue: queueName,
                                     autoAck: true,
@@ -218,24 +227,26 @@ namespace SoccetsWithDB
             return finalSet;
         }
 
-        static DataSet BytesToDataSet(byte[] byteArrayData)
-        {
-            DataSet ds;
-            using (MemoryStream stream = new MemoryStream(byteArrayData))
-            {
-                BinaryFormatter bformatter = new BinaryFormatter();
-                ds = (DataSet)bformatter.Deserialize(stream);
-            }
-            return ds;
-        }
-
-        static byte[] DataSetToBytes(DataSet dataSet)
+        static byte[] ToBytes<T>(T parameters)
         {
             MemoryStream stream = new System.IO.MemoryStream();
             System.Runtime.Serialization.IFormatter formatter = new BinaryFormatter();
-            formatter.Serialize(stream, dataSet);
+            formatter.Serialize(stream, parameters);
+
             byte[] bytes = stream.GetBuffer();
+
             return bytes;
+        }
+
+        static T FromBytes<T>(byte[] byteArrayData)
+        {
+            T parameters;
+            using (MemoryStream stream = new MemoryStream(byteArrayData))
+            {
+                BinaryFormatter bformatter = new BinaryFormatter();
+                parameters = (T)bformatter.Deserialize(stream);
+            }
+            return parameters;
         }
 
         static void Print(DataSet finalSet)

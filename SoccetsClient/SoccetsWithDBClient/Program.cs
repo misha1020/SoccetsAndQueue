@@ -22,8 +22,8 @@ namespace SoccetsWithDBClient
         {
             string dbFileName = "StudentsDB.db";
             DataSet dSet = ReadDataFromFile(dbFileName);
-            //SoccetsSend(dSet);
-            QueueSend(dSet);
+            SoccetsSend(dSet);
+            //QueueSend(dSet);
             Console.ReadKey();
         }
 
@@ -32,13 +32,15 @@ namespace SoccetsWithDBClient
             int port = 11000;
             try
             { 
-                IPAddress ipAddr = IPAddress.Parse("25.12.0.19");
+                IPAddress ipAddr = IPAddress.Parse("127.0.0.1");
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
 
                 Socket sender = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 sender.Connect(ipEndPoint);
                 Console.WriteLine("Сокет соединяется с {0} ", sender.RemoteEndPoint.ToString());
-                sender.Send(DataSetToBytes(dSet));
+                byte[] byteSet = ToBytes<DataSet>(dSet);
+                sender.Send(ToBytes<int>(byteSet.Length));
+                sender.Send(byteSet);
                 sender.Shutdown(SocketShutdown.Both);
                 sender.Close();
                 Console.WriteLine("Данные отправлены");
@@ -65,7 +67,7 @@ namespace SoccetsWithDBClient
                 channel.ExchangeDeclare(exchange: "logs", type: "fanout");
                 string input = "";
                 input = Console.ReadLine();
-                var body = DataSetToBytes(dSet);
+                var body = ToBytes<DataSet>(dSet);
                 channel.BasicPublish(exchange: "logs", routingKey: "", basicProperties: null, body: body);
                 Console.WriteLine("Данные отправлены!");
             }
@@ -107,44 +109,26 @@ namespace SoccetsWithDBClient
             return dSet;
         }
 
-        static byte[] DataSetToBytes(DataSet dataSet)
+        static byte[] ToBytes<T>(T parameters)
         {
             MemoryStream stream = new System.IO.MemoryStream();
             System.Runtime.Serialization.IFormatter formatter = new BinaryFormatter();
-            formatter.Serialize(stream, dataSet);
+            formatter.Serialize(stream, parameters);
 
             byte[] bytes = stream.GetBuffer();
 
             return bytes;
         }
 
-        static DataSet BytesToDataSet(byte[] byteArrayData)
+        static T FromBytes<T>(byte[] byteArrayData)
         {
-            DataSet ds;
+            T parameters;
             using (MemoryStream stream = new MemoryStream(byteArrayData))
             {
                 BinaryFormatter bformatter = new BinaryFormatter();
-                ds = (DataSet)bformatter.Deserialize(stream);
+                parameters = (T)bformatter.Deserialize(stream);
             }
-            return ds;
-        }
-
-        static void Print(DataSet finalSet)
-        {
-            foreach (DataTable dTable in finalSet.Tables)
-            {
-                Console.WriteLine(dTable.TableName);
-                foreach (DataColumn col in dTable.Columns)
-                    Console.Write("\t{0}", col.ColumnName);
-                Console.WriteLine();
-                foreach (DataRow row in dTable.Rows)
-                {
-                    var cells = row.ItemArray;
-                    foreach (object cell in cells)
-                        Console.Write("\t{0}", cell);
-                    Console.WriteLine();
-                }
-            }
+            return parameters;
         }
     }
 }
