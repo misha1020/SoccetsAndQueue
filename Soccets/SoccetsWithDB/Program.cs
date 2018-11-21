@@ -33,25 +33,14 @@ namespace SoccetsWithDB
 
         static void Main(string[] args)
         {
-            DataSet dataFromClient = new DataSet();
-            dataFromClient = SoccetsRecieve();
-            //dataFromClient = QueueRecieve();
-
-            if (dataFromClient != null && dataFromClient.Tables.Count > 0)
+            while (true)
             {
-                DataSet finalSet = new DataSet("Final");
-                finalSet = DataNormalize(dataFromClient);
-                Print(finalSet);
-
-                AddInfoToDB(finalSet);
+                SoccetsRecieve();
+                //QueueRecieve();
             }
-            else
-                Console.WriteLine("Датасэт не был принят");
-            Console.ReadKey();
         }
 
-
-        public static DataSet SoccetsRecieve()
+        public static void SoccetsRecieve()
         {
             int port = 11000;
 
@@ -74,13 +63,13 @@ namespace SoccetsWithDB
                     handler.Shutdown(SocketShutdown.Both);
                     handler.Close();
                     Console.WriteLine("Нажмите клавишу [enter], чтобы отобразить полученные данные");
-                    return dSet;
+                    Console.ReadLine();
+                    WriteToDBAndPrint(dSet);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                return null;
             }
             finally
             {                
@@ -88,7 +77,7 @@ namespace SoccetsWithDB
             }
         }
 
-        public static DataSet QueueRecieve()
+        public static void QueueRecieve()
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
@@ -102,6 +91,7 @@ namespace SoccetsWithDB
                                       routingKey: "");
 
                     Console.WriteLine("Ожидание...");
+
                     var consumer = new EventingBasicConsumer(channel);
                     DataSet dSet = new DataSet();
                     consumer.Received += (model, ea) =>
@@ -112,9 +102,10 @@ namespace SoccetsWithDB
                     channel.BasicConsume(queue: queueName,
                                     autoAck: true,
                                     consumer: consumer);
+
                     Console.WriteLine("Нажмите клавишу [enter], чтобы считать данные из очереди");
-                    Console.ReadLine();                    
-                    return dSet;
+                    Console.ReadLine();
+                    WriteToDBAndPrint(dSet);
                 }
             }
         }
@@ -263,6 +254,21 @@ namespace SoccetsWithDB
                     Console.WriteLine();
                 }
             }
+        }
+
+        private static void WriteToDBAndPrint(DataSet dSet)
+        {
+            DataSet dataFromClient = dSet;
+            if (dataFromClient != null && dataFromClient.Tables.Count > 0)
+            {
+                DataSet finalSet = new DataSet("Final");
+                finalSet = DataNormalize(dataFromClient);
+                Print(finalSet);
+
+                AddInfoToDB(finalSet);
+            }
+            else
+                Console.WriteLine("Датасэт не был принят");
         }
 
         static void AddInfoToDB(DataSet finalSet)
