@@ -33,14 +33,14 @@ namespace SoccetsWithDB
 
         static void Main(string[] args)
         {            
-                SoccetsRecieve();
-                //QueueRecieve();
+                //SocketRecieve();
+                QueueRecieve();
             
         }
 
-        public static void SoccetsRecieve()
+        public static void SocketRecieve()
         {
-            int port = 11000;
+            int port = 11001;
             while (true)
             {
 

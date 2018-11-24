@@ -22,8 +22,8 @@ namespace SoccetsWithDBClient
         {
             string dbFileName = "StudentsDB.db";
             DataSet dSet = ReadDataFromFile(dbFileName);
-            SoccetsSend(dSet);
-            //QueueSend(dSet);
+            //SoccetsSend(dSet);
+            QueueSend(dSet);
             Console.ReadKey();
         }
 
